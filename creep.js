@@ -113,11 +113,29 @@ const removeSourceFromCreep = (creep) => {
     delete creep.memory.takenSource;
 }
 
+const saveStoreForCreep = (creep, target) => {
+    creep.memory.store = target.id;
+}
+const removeStoreFromCreep = (creep) => {
+    // delete creep.memory.store;
+};
+
+const getStoreFromCreep = (creep) => {
+    const storeId = creep.memory.store;
+    const structure = Game.getObjectById(storeId);
+    if (!structure) {
+        return
+    }
+    return structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+        ? structure
+        : undefined;
+}
+
 const harvest = (creep) => {
     const sources = creep.room.find(FIND_SOURCES);
     const source = findAvailableSource(sources, creep);
     if (!source) {
-        return
+        return;
     }
     if(creep.harvest(source) == ERR_NOT_IN_RANGE) {
         creep.moveTo(source, {visualizePathStyle: {stroke: '#ffffff'}});
@@ -131,4 +149,6 @@ module.exports = {
     removeSourceFromCreep,
     harvest,
     isWarrior,
+    getStoreFromCreep,
+    saveStoreForCreep,
 };

@@ -180,6 +180,7 @@ const strategies = {
         [DANGER_LEVEL.ATTACKED]: {
             init: {
                 run: function(room) {
+                    clearMemoryFromDeadCreeps(room);
                     const creeps = getCreepsByRoomName(room);
                     const warriors = [];
                     const peaceful = [];
@@ -301,7 +302,7 @@ const strategies = {
                     const peaceful = creeps.filter(creep => !isWarrior(creep));
                     const MAX_PEACEFULL_PERCENT = 80;
                     // change population
-                    const maxPopulation = calcMaxPopulation(room, 3);
+                    const maxPopulation = calcMaxPopulation(room, 2);
                     const currentPeacefullPercent = (peaceful.length / maxPopulation) * 100;
                     if (currentPeacefullPercent > MAX_PEACEFULL_PERCENT) {
                         return
@@ -376,6 +377,7 @@ const strategies = {
         [DANGER_LEVEL.ATTACKED]: {
             init: {
                 run: function(room) {
+                    clearMemoryFromDeadCreeps(room);
                     const creeps = getCreepsByRoomName(room);
                     const towers = getRoomTowers(room);
                     //@TODO: createTowerModule;
