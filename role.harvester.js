@@ -1,6 +1,8 @@
 const {
     removeSourceFromCreep,
     harvest,
+    getStoreFromCreep,
+    saveStoreForCreep,
 } = require("./creep");
 
 
@@ -11,7 +13,7 @@ var roleHarvester = {
     /** @param {Creep} creep **/
     run: function(creep) {
         const shouldHarvest = !creep.memory.shouldTransfer && creep.store.getFreeCapacity();
-
+        const cachedStore = getStoreFromCreep(creep);
         if (shouldHarvest) {
             creep.memory.shouldTransfer = false;
             harvest(creep)
@@ -22,23 +24,20 @@ var roleHarvester = {
                 return;
             }
             removeSourceFromCreep(creep);
-            const target = creep.pos.findClosestByRange(FIND_STRUCTURES, {
+            const target = cachedStore || creep.pos.findClosestByRange(FIND_STRUCTURES, {
                     filter: (structure) => {
                         const hasSpaceInSpawn = hasCapacity(structure, STRUCTURE_SPAWN);
                         const hasSpaceInExtention = hasCapacity(structure, STRUCTURE_EXTENSION);
                         const hasSpaseInTower = hasCapacity(structure, STRUCTURE_TOWER);
-                        // const hasSpaceInContainer = structure.structureType == STRUCTURE_CONTAINER && structure.store[RESOURCE_ENERGY] < structure.storeCapacity;
                         const hasSpaceInContainer = hasCapacity(structure, STRUCTURE_CONTAINER);
-                        return hasSpaceInSpawn || hasSpaceInExtention || hasSpaseInTower || hasSpaceInContainer;
-                        // return (structure.structureType == STRUCTURE_EXTENSION ||
-                        //         structure.structureType == STRUCTURE_SPAWN ||
-                        //         structure.structureType == STRUCTURE_STORAGE ||
-                        //         structure.structureType == STRUCTURE_TOWER) && 
-                        //         structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+                        return hasSpaceInSpawn || hasSpaceInExtention || hasSpaseInTower || hasSpaceInContainer
                     }
             });
-            
+         
             if(target) {
+                if (!cachedStore) {
+                    saveStoreForCreep(creep, target)
+                }
                 creep.memory.shouldTransfer = true;
                 const transferResult = creep.transfer(target, RESOURCE_ENERGY);
                 if( transferResult == ERR_NOT_IN_RANGE) {

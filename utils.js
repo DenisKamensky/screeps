@@ -40,7 +40,7 @@ const calcMaxPopulation = (room, customMultiplier) => {
     const MAX_LIMIT_PER_LEVEL = 4;
     const controller = getControllerByRoom(room);
     const multiplier = customMultiplier || MAX_LIMIT_PER_LEVEL;
-    const MAX_PER_ROOM = 10;
+    const MAX_PER_ROOM = 1000;
     // @TODO implement this
     const result = (controller.level || 1) * multiplier;
 
@@ -65,13 +65,33 @@ const getRoomTowers = room => {
 }
 
 const findColsestStructureToRepair = (tower, room) => {
-    const timeToWait = 1000;
+    const timeToWait = 500;
     const scheduledTime = room.memory.towerSchdule || Game.time;
     if ((scheduledTime - Game.time) > 0) {
         return [];
     }
+    
+    const healthCheckers = {
+        default: (structure) => structure.hits < structure.hitsMax,
+        [STRUCTURE_WALL]: (structure) => {
+            const minTowerHitsPercentage = 0.001;
+            if ((structure.hits / structure.hitsMax) * 100 < minTowerHitsPercentage) {
+                return true;
+            }
+        },
+        [STRUCTURE_RAMPART]: (structure) => {
+            const minTowerHitsPercentage = 0.003;
+            if ((structure.hits / structure.hitsMax) * 100 < minTowerHitsPercentage) {
+                return true;
+            }
+        },
+        
+    }
     const closestDamagedStructure = tower.pos.findClosestByRange(FIND_STRUCTURES, {
-        filter: (structure) => structure.hits < structure.hitsMax
+        filter: (structure) => {
+            const hasDamagedStructureFn = healthCheckers[structure.structureType] || healthCheckers.default;
+            return hasDamagedStructureFn(structure);
+        }
     });
     if (!closestDamagedStructure) {
         room.memory.towerSchdule = Game.time + timeToWait;
@@ -114,6 +134,14 @@ const clearMemoryFromDeadCreeps = (room) => {
             delete room.memory.takenSources[sourceName][creepId];
         })
     })
+
+
+    Object.keys(Memory.creeps).forEach(creepId => {
+        if(!Game.creeps[creepId]) {
+            delete Memory.creeps[creepId];
+        }
+    })
+
 }
 
 module.exports = {
